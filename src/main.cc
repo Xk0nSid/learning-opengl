@@ -1,10 +1,49 @@
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 constexpr int WINDOW_WIDTH = 800;
 constexpr int WINDOW_HEIGHT = 600;
+
+struct ShaderProgramSource {
+    std::string VertexSource;
+    std::string FragmentSource;
+};
+
+static ShaderProgramSource ParseShader(const std::string& filepath)
+{
+    std::ifstream stream(filepath);
+
+    enum class ShaderType {
+        NONE = -1,
+        VERTEX = 0,
+        FRAGMENT = 1,
+    };
+
+    std::stringstream ss[2];
+
+    ShaderType type = ShaderType::NONE;
+    std::string line;
+    while (getline(stream, line)) {
+        if (line.find("#shader") != std::string::npos) {
+            if (line.find("vertex") != std::string::npos) {
+                // set mode to vertex shader
+                type = ShaderType::VERTEX;
+            } else if (line.find("fragment") != std::string::npos) {
+                // set mod to fragment shader
+                type = ShaderType::FRAGMENT;
+            }
+        } else {
+            ss[(int)type] << line << "\n";
+        }
+    }
+
+    return { ss[0].str(), ss[1].str() };
+}
 
 static unsigned int CompileShader(unsigned int shaderType, const std::string& source)
 {
@@ -139,27 +178,9 @@ int main(int argc, char* argv[])
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
-    std::string vertexShader = R"glsl(
-        #version 330 core
-        layout(location = 0) in vec4 position;
+    ShaderProgramSource source = ParseShader("../res/shaders/Basic.shader");
 
-        void main()
-        {
-           gl_Position = position;
-        }
-    )glsl";
-
-    std::string fragShader = R"glsl(
-        #version 330 core
-        layout(location = 0) out vec4 color;
-
-        void main()
-        {
-           color = vec4(1.0, 0.0, 0.0, 1.0);
-        }
-    )glsl";
-
-    unsigned int shader = CreateShader(vertexShader, fragShader);
+    unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
     glUseProgram(shader);
 
     while (!glfwWindowShouldClose(window)) {
@@ -172,6 +193,8 @@ int main(int argc, char* argv[])
 
         glfwPollEvents();
     }
+
+    glDeleteProgram(shader);
 
     glfwTerminate();
 
