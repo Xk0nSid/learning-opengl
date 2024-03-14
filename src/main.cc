@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 constexpr int WINDOW_WIDTH = 800;
@@ -26,6 +27,13 @@ int main(int argc, char* argv[])
     }
 
     glfwMakeContextCurrent(window);
+
+    if (glewInit() != GLEW_OK) {
+        std::cerr << "Failed initialize GLEW" << std::endl;
+
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
 
     while (!glfwWindowShouldClose(window)) {
         // Rendering Code Here
