@@ -35,6 +35,8 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
+    std::cout << "Using OpenGL " << glGetString(GL_VERSION) << std::endl;
+
     while (!glfwWindowShouldClose(window)) {
         // Rendering Code Here
         glClear(GL_COLOR_BUFFER_BIT);
